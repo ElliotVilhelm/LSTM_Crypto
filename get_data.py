@@ -33,7 +33,10 @@ def get_data():
     open_values = list(map(lambda x: float(x[1]), XRP))
     high_values = list(map(lambda x: float(x[2]), XRP))
     volume_values = list(map(lambda x: float(x[5]), XRP))
-    prices = list(map(lambda x: (float(x[2]) + float(x[3]) + float(x[4]))/3.0, XRP))
+    prices = list(map(lambda x: (100000 * (float(x[2]) + float(x[3]) + float(x[4]))/3.0), XRP))
+
+    # import pdb
+    # pdb.set_trace()
 
     #output = talib.SMA(np.array(open_values), timeperiod=100)
     rsi = talib.RSI(np.array(open_values), timeperiod=14)
