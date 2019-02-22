@@ -27,27 +27,37 @@ import talib
 
 def get_data():
     client = Client(api_key, api_secret)
-    #XRP = client.get_historical_klines(symbol='XRPBTC', interval=binance_constants.KLINE_INTERVAL_4HOUR, start_str="12 month ago UTC");
+    XRP = client.get_historical_klines(symbol='XRPBTC', interval=binance_constants.KLINE_INTERVAL_4HOUR, start_str="12 month ago UTC");
     # pickle.dump(XRP, open('data.pkl', 'wb'))
     XRP = pickle.load(open('data.pkl', 'rb'))
+    print("data size", len(XRP))
     open_values = list(map(lambda x: float(x[1]), XRP))
-    high_values = list(map(lambda x: float(x[2]), XRP))
-    volume_values = list(map(lambda x: float(x[5]), XRP))
-    prices = list(map(lambda x: (100000 * (float(x[2]) + float(x[3]) + float(x[4]))/3.0), XRP))
-
-    # import pdb
+    # high_values = list(map(lambda x: float(x[2]), XRP))
+    # volume_values = list(map(lambda x: float(x[5]), XRP))
+    import pdb
     # pdb.set_trace()
-
-    #output = talib.SMA(np.array(open_values), timeperiod=100)
+    prices = list(map(lambda x: ((float(x[2]) + float(x[3]) + float(x[4]))/3.0) * 100000, XRP))
+    targets = prices[21:]
+    targets = list(map(lambda x: x, targets))
+    # prices = list(map(lambda x: (x - min(prices))/(max(prices) - min(prices)), prices))
+    prices = prices[20:-1]
     rsi = talib.RSI(np.array(open_values), timeperiod=14)
-
+    rsi = rsi[20:-1]
+    high = np.array(list(map(lambda x: float(x[2]), XRP)))
+    low = np.array(list(map(lambda x: float(x[3]), XRP)))
+    close = np.array(list(map(lambda x: float(x[4]), XRP)))
+    real = talib.ATR(high, low, close, timeperiod=14)
+    real = real[20:-1]
+    # rsi = list(map(lambda x: (x - min(rsi))/(max(rsi) - min(rsi)), rsi))
     #plt.plot(output)
-    plt.plot(open_values)
+    # plt.plot(open_values)
     plt.plot(prices)
     #plt.show()
     plt.plot(rsi)
-    #plt.show()
+    # plt.show()
     #print(len(XRP))
-    return prices[100:], rsi[100:]
+    # import pdb
+    # pdb.set_trace()
+    return [prices, rsi, real], targets
 
 
