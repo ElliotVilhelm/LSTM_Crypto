@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from get_data import get_data
 import random
 
-INPUT_SIZE = 2
+INPUT_SIZE = 3
 BATCH_SIZE = 100
-TIME_STEP = 40
+TIME_STEP = 1
 EPOCHS = 10
 
 data, targets = get_data()  # [prices, rsi], target_prices
@@ -99,8 +99,7 @@ plt.figure(1, figsize=(12, 5))
 plt.ion()           # continuously plot
 
 
-x_val, y_val, steps, data, targets = get_prepped_data(data, targets, 200, 1, destructive=1)  # validate on 50 batches of timestep 1
-
+x_val, y_val, val_steps, data, targets = get_prepped_data(data, targets, 200, 2, destructive=1)  # validate on 50 batches of timestep 1
 for step in range(600):
     X, T, steps = get_prepped_data(data, targets, BATCH_SIZE, TIME_STEP)
     prediction, h_state = rnn(X, h_state)   # rnn output
@@ -114,13 +113,13 @@ for step in range(600):
 
     # plotting
     # plt.plot(list(range(steps[0][0], steps[0][1])), T.squeeze()[0].numpy(), 'r-')
-    plt.plot(list(range(steps[0][0], steps[0][1])), prediction.squeeze()[0].detach().numpy(), 'r-')
+    plt.plot(list(range(steps[0][0], steps[0][1])), prediction.squeeze()[0].detach().numpy(), 'x-')
     plt.draw(); plt.pause(0.05)
-    if step % 200 == 0:
+    if step % 100 == 0:
         plt.clf()
         plt.grid(True)
         plt.plot(t_plt)
-        plt.draw(); plt.pause(0.05)
+        plt.draw(); plt.pause(0.01)
     if step % 100 == 0:
         print(f"Step: {step} Loss: {loss}")
 
@@ -131,11 +130,34 @@ prediction, h_state = rnn(x_val, h_state)   # rnn output
 h_state = Variable(h_state.data)        # repack the hidden state, break the connection from last iteration
 loss = loss_func(prediction, y_val)         # cross entropy loss
 
+total_pred = prediction.size(0)
+correct = 0.0
 for i in range(prediction.size(0)):
-    pred = prediction[i].detach().item()
-    t = y_val[i].item()
-    print("Target: ", t, " Prediction: ", pred)
-
-
-
+    pred_delta = prediction[i].detach()[1].item() - prediction[i].detach()[0].item()
+    tar_delta = y_val[i][1].item() - y_val[i][0].item()
+    # t = y_val[i].item()
+    print("Target: ", y_val[i], " Prediction: ", prediction[i])
+    print("*"*50)
+    if pred_delta > 0:
+        print("predicting price going up ", val_steps[i][0], " - ", val_steps[i][1])
+        if tar_delta > 0:
+            print("target went up")
+            correct += 1
+        else:
+            print("target went down")
+    else:
+        print("predicting price going down ", val_steps[i][0], " - ", val_steps[i][1])
+        if tar_delta > 0:
+            print("target went up")
+        else:
+            print("target went down")
+            correct += 1
+accuracy = correct / total_pred
+print("Accuracy: ", accuracy)
+print("total pred: ", total_pred)
+plt.clf()
+plt.ioff()
+plt.grid(True)
+plt.plot(t_plt)
+# plt.show()
 print("---end---")
